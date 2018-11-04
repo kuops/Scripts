@@ -21,7 +21,7 @@ file:///d:/path/to/file.box
 启动 vagrant
 
 ```
-vagrant up
+vagrant up --provision
 ```
 
 登录 vm 虚拟机
