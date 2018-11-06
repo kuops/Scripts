@@ -90,7 +90,11 @@ Vagrant.configure("2") do |config|
 	  podSubnet: 10.244.0.0/16
 	  serviceSubnet: 10.96.0.0/12
 	nodeRegistration:
+<<<<<<< HEAD
 	  name: kubernetes-dev
+=======
+	  name: kubeadm-master
+>>>>>>> db6c2b6d53e8de77568a04fecd166656f4fee4e4
 	  taints:
 	  - effect: NoSchedule
 	    key: node-role.kubernetes.io/master
@@ -115,11 +119,19 @@ Vagrant.configure("2") do |config|
 	  kubectl taint nodes --all node-role.kubernetes.io/master-
 
 	  # kube network use flannel
+<<<<<<< HEAD
 	  kubectl apply  -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/flannel/kube-flannel.yml
 
 	  # bash complate
 	  echo "source <(kubectl completion bash)" >> /etc/profile.d/kubernetes.sh
 	  source /etc/profile.d/kubernetes.sh
+=======
+	  kubectl apply  -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/kube-flannel.yml
+
+	  # bash complate
+	  echo "source <(kubectl completion bash)" >> ~/.bashrc
+	  source ~/.bashrc
+>>>>>>> db6c2b6d53e8de77568a04fecd166656f4fee4e4
 
 	  # local storage class
 	  tee -i storageclass.yml <<-'EOF'
@@ -127,11 +139,19 @@ Vagrant.configure("2") do |config|
 	  apiVersion: storage.k8s.io/v1
 	  metadata:
 	    name: local-storage
+<<<<<<< HEAD
 	    annotations:
 	      storageclass.kubernetes.io/is-default-class: "true"
 	  provisioner: kubernetes.io/no-provisioner
 	  volumeBindingMode: WaitForFirstConsumer
 	EOF
+=======
+	  annotations:
+	    storageclass.kubernetes.io/is-default-class: "true"
+	  provisioner: kubernetes.io/no-provisioner
+	  volumeBindingMode: WaitForFirstConsumer
+	  EOF
+>>>>>>> db6c2b6d53e8de77568a04fecd166656f4fee4e4
 
 	  kubectl apply -f storageclass.yml
 
@@ -144,7 +164,11 @@ Vagrant.configure("2") do |config|
           kubectl create -f metrics-server/deploy/1.8+/
 
 	  # install kubernetes dashboard
+<<<<<<< HEAD
 	  curl -sLO https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
+=======
+	  curl -sLO https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/alternative/kubernetes-dashboard.yaml
+>>>>>>> db6c2b6d53e8de77568a04fecd166656f4fee4e4
           sed -i 's@k8s.gcr.io/@kuops/@g' kubernetes-dashboard.yaml
 	  kubectl apply -f kubernetes-dashboard.yaml
 
@@ -169,10 +193,13 @@ Vagrant.configure("2") do |config|
 
 	  curl -sLO https://raw.githubusercontent.com/kubernetes/kubernetes/master/cluster/addons/fluentd-elasticsearch/kibana-service.yaml
 	  kubectl apply -f kibana-service.yaml
+<<<<<<< HEAD
 
 	  # coredns loop bugfix
 	  kubectl apply  -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/coredns/coredns-comfigmap.yml
 
+=======
+>>>>>>> db6c2b6d53e8de77568a04fecd166656f4fee4e4
 	fi
   SHELL
 end
