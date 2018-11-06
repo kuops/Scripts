@@ -7,8 +7,14 @@ Vagrant.configure("2") do |config|
   config.ssh.insert_key = false
   config.ssh.private_key_path = [ "/mnt/d/vagrant-home/.vagrant.d/insecure_private_key", "~/.ssh/id_rsa" ]
   config.vm.network "private_network", ip: "10.0.7.100"
+  config.vm.hostname = "kubernetes-dev"
+  config.hostmanager.enabled = true
+  config.hostmanager.manage_host = true
+  config.hostmanager.manage_guest = true
+  config.hostmanager.ignore_private_ip = false
+  config.hostmanager.include_offline = true
   config.vm.provider "virtualbox" do |vb|
-    vb.name = "kubernetes"
+    vb.name = "kubernetes-dev"
     # bugfix at https://github.com/hashicorp/vagrant/issues/8604
     vb.customize [ "modifyvm", :id, "--uartmode1", "disconnected" ]
     vb.memory = "16384"
@@ -16,99 +22,158 @@ Vagrant.configure("2") do |config|
   end
   config.vm.provision "file", source: "~/.ssh/id_rsa.pub", destination: "/home/vagrant/.ssh/vagrant.pub"
   config.vm.provision "shell", inline: <<-SHELL
-        #!/usr/bin/env bash
-        set -ex
+	#!/usr/bin/env bash
+	set -ex
 
-        # preventing apt-get trying access stdin
-        export DEBIAN_FRONTEND=noninteractive
+	# preventing apt-get trying access stdin
+	export DEBIAN_FRONTEND=noninteractive
 
-        # ssh public key insert to authorized_keys
-        cat /home/vagrant/.ssh/vagrant.pub >> /home/vagrant/.ssh/authorized_keys
+	# ssh public key insert to authorized_keys
+	cat /home/vagrant/.ssh/vagrant.pub >> /home/vagrant/.ssh/authorized_keys
 
-        # replace source list mirrors
-        sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/cloud/cloud.cfg
-        sed -i 's/security.ubuntu.com/mirrors.aliyun.com/g' /etc/cloud/cloud.cfg
-        systemctl restart cloud-init
-        sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
-        sed -i 's/security.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
+	# replace source list mirrors
+	sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/cloud/cloud.cfg
+	sed -i 's/security.ubuntu.com/mirrors.aliyun.com/g' /etc/cloud/cloud.cfg
+	systemctl restart cloud-init
+	sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
+	sed -i 's/security.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
 
-        # install common software
-        apt-get update
-        apt-get install -y python-pip htop wget pv git htop iotop apache2-utils mysql-client tree iotop iftop bash-completion zip unzip apache2-utils software-properties-common lrzsz redis-tools bind9utils lftp net-tools dos2unix apt-transport-https curl
+	# install common software
+	apt-get update
+	apt-get install -y python-pip htop wget pv git htop iotop apache2-utils mysql-client tree iotop iftop bash-completion zip unzip apache2-utils software-properties-common lrzsz redis-tools bind9utils lftp net-tools dos2unix apt-transport-https curl
 
-        # install docker
-        apt-get install -y apt-transport-https ca-certificates curl software-properties-common
-        curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | apt-key add -
+	# install docker
+	apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+	curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | apt-key add -
 
-        add-apt-repository \
-        "deb [arch=amd64] https://mirrors.aliyun.com/docker-ce/linux/ubuntu/ \
-        $(lsb_release -cs) \
-        stable"
+	add-apt-repository \
+	"deb [arch=amd64] https://mirrors.aliyun.com/docker-ce/linux/ubuntu/ \
+	$(lsb_release -cs) \
+	stable"
 
-        apt-get update
-        apt-get install -y docker-ce
-        tee /etc/docker/daemon.json <<-'EOF'
-        {
-          "registry-mirrors": ["https://fz5yth0r.mirror.aliyuncs.com"]
-        }
-        EOF
-        usermod -aG docker vagrant
-        systemctl restart docker
-        systemctl enable docker
+	apt-get update
+	apt-get install -y docker-ce
+	tee -i /etc/docker/daemon.json <<-'EOF'
+	{
+	  "registry-mirrors": ["https://fz5yth0r.mirror.aliyuncs.com"]
+	}
+	EOF
+	usermod -aG docker vagrant
+	systemctl restart docker
+	systemctl enable docker
 
-        # install ansible
-        pip install ansible
+	# install ansible
+	pip install -i https://pypi.tuna.tsinghua.edu.cn/simple ansible
 
-        # install kubernetes
-        # aliyun kubernetes mirror repo registry.cn-beijing.aliyuncs.com/acs/kube-scheduler-amd64:v1.11.2
-        curl https://mirrors.aliyun.com/kubernetes/apt/doc/apt-key.gpg | apt-key add -
-        echo 'deb https://mirrors.aliyun.com/kubernetes/apt/ kubernetes-xenial main'|sudo tee -i /etc/apt/sources.list.d/kubernetes.list
-        apt-get update
-        apt-get install -y kubelet kubeadm kubectl
+	# install kubernetes
+	curl https://mirrors.aliyun.com/kubernetes/apt/doc/apt-key.gpg | apt-key add -
+	echo 'deb https://mirrors.aliyun.com/kubernetes/apt/ kubernetes-xenial main'| \
+	sudo tee -i /etc/apt/sources.list.d/kubernetes.list
+	apt-get update
+	apt-get install -y kubelet kubeadm kubectl
 
-        tee /home/vagrant/config.yml <<-'EOF'
-        apiVersion: kubeadm.k8s.io/v1alpha2
-        kind: MasterConfiguration
-        api:
-          advertiseAddress: 10.0.7.100
-          bindPort: 6443
-        bootstrapTokens:
-        - groups:
-          - system:bootstrappers:kubeadm:default-node-token
-          token: 14oozg.4x9auimp4bgi7sav
-          ttl: 24h0m0s
-        imageRepository: kuops
-        kubernetesVersion: v1.12.0
-        networking:
-          dnsDomain: cluster.local
-          podSubnet: 10.244.0.0/16
-          serviceSubnet: 10.96.0.0/12
-        nodeRegistration:
-          name: kubeadm-master
-          taints:
-          - effect: NoSchedule
-            key: node-role.kubernetes.io/master
-        EOF
+	tee -i /home/vagrant/config.yml <<-'EOF'
+	apiVersion: kubeadm.k8s.io/v1alpha2
+	kind: MasterConfiguration
+	api:
+	  advertiseAddress: 10.0.7.100
+	  bindPort: 6443
+	bootstrapTokens:
+	- groups:
+	  - system:bootstrappers:kubeadm:default-node-token
+	  token: 14oozg.4x9auimp4bgi7sav
+	  ttl: 24h0m0s
+	imageRepository: kuops
+	kubernetesVersion: v1.12.0
+	networking:
+	  dnsDomain: cluster.local
+	  podSubnet: 10.244.0.0/16
+	  serviceSubnet: 10.96.0.0/12
+	nodeRegistration:
+	  name: kubernetes-dev
+	  taints:
+	  - effect: NoSchedule
+	    key: node-role.kubernetes.io/master
+	EOF
 
-        # kubeadm pulling  images
-        kubeadm config images pull --config config.yml
+	# kubeadm pulling  images
+	kubeadm config images pull --config config.yml
+	if ! kubectl get node &> /dev/null ;then
+	  # kubeadm init
+	  kubeadm init --config config.yml
 
-        # kubeadm init
-        kubeadm init --config config.yml
+	  # set kubectl config
+	  mkdir -p ~vagrant/.kube
+	  cp -i /etc/kubernetes/admin.conf ~vagrant/.kube/config
+	  chown vagrant:vagrant ~vagrant/.kube/config
 
-        # set kubectl config
-        mkdir -p ~vagrant/.kube
-        cp -i /etc/kubernetes/admin.conf ~vagrant/.kube/config
-        chown vagrant:vagrant $HOME/.kube/config
+	  mkdir -p ~/.kube
+	  cp -i /etc/kubernetes/admin.conf ~/.kube/config
+	  chown root:root ~/.kube/config
 
-        mkdir -p ~/.kube
-        cp -i /etc/kubernetes/admin.conf ~/.kube/config
-        chown vagrant:vagrant ~/.kube/config
+	  # taint the master node
+	  kubectl taint nodes --all node-role.kubernetes.io/master-
 
-	# taint the master node
-	kubectl taint nodes --all node-role.kubernetes.io/master-
+	  # kube network use flannel
+	  kubectl apply  -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/flannel/kube-flannel.yml
 
-	# kube network use flannel
-	kubectl -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/kube-flannel.yml
+	  # bash complate
+	  echo "source <(kubectl completion bash)" >> /etc/profile.d/kubernetes.sh
+	  source /etc/profile.d/kubernetes.sh
+
+	  # local storage class
+	  tee -i storageclass.yml <<-'EOF'
+	  kind: StorageClass
+	  apiVersion: storage.k8s.io/v1
+	  metadata:
+	    name: local-storage
+	    annotations:
+	      storageclass.kubernetes.io/is-default-class: "true"
+	  provisioner: kubernetes.io/no-provisioner
+	  volumeBindingMode: WaitForFirstConsumer
+	EOF
+
+	  kubectl apply -f storageclass.yml
+
+	  # traefik ingress 
+	  kubectl apply -f https://raw.githubusercontent.com/containous/traefik/master/examples/k8s/traefik-deployment.yaml
+
+	  # metric-servers
+	  git clone https://github.com/kubernetes-incubator/metrics-server.git
+          sed -i 's@k8s.gcr.io/@kuops/@g' metrics-server/deploy/1.8+/metrics-server-deployment.yaml
+          kubectl create -f metrics-server/deploy/1.8+/
+
+	  # install kubernetes dashboard
+	  curl -sLO https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
+          sed -i 's@k8s.gcr.io/@kuops/@g' kubernetes-dashboard.yaml
+	  kubectl apply -f kubernetes-dashboard.yaml
+
+	  # install efk to logging
+	  curl -sLO https://raw.githubusercontent.com/kubernetes/kubernetes/master/cluster/addons/fluentd-elasticsearch/es-service.yaml
+	  kubectl apply -f es-service.yaml
+
+	  curl -sLO https://raw.githubusercontent.com/kubernetes/kubernetes/master/cluster/addons/fluentd-elasticsearch/es-statefulset.yaml
+	  sed -i 's@k8s.gcr.io/@kuops/@g' es-statefulset.yaml
+	  kubectl apply -f es-statefulset.yaml
+
+	  curl -sLO https://raw.githubusercontent.com/kubernetes/kubernetes/master/cluster/addons/fluentd-elasticsearch/fluentd-es-configmap.yaml
+	  kubectl apply -f fluentd-es-configmap.yaml
+
+	  curl -sLO https://raw.githubusercontent.com/kubernetes/kubernetes/master/cluster/addons/fluentd-elasticsearch/fluentd-es-ds.yaml
+	  sed -i 's@k8s.gcr.io/@kuops/@g' fluentd-es-ds.yaml
+	  kubectl apply -f fluentd-es-ds.yaml
+
+	  curl -sLO https://raw.githubusercontent.com/kubernetes/kubernetes/master/cluster/addons/fluentd-elasticsearch/kibana-deployment.yaml
+	  sed -i 's@docker.elastic.co/kibana/@registry.cn-beijing.aliyuncs.com/efk-install/@g' kibana-deployment.yaml
+	  kubectl apply -f kibana-deployment.yaml
+
+	  curl -sLO https://raw.githubusercontent.com/kubernetes/kubernetes/master/cluster/addons/fluentd-elasticsearch/kibana-service.yaml
+	  kubectl apply -f kibana-service.yaml
+
+	  # coredns loop bugfix
+	  kubectl apply  -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/coredns/coredns-comfigmap.yml
+
+	fi
   SHELL
 end
+
