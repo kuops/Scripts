@@ -22,7 +22,7 @@ data:
 
     [acme]
     email = "opshsy@gmail.com"
-    storage = "acme.json"
+    storage = "/etc/traefik/cert/acme.json"
     entryPoint = "https"
     onHostRule = true
     [acme.httpChallenge]
