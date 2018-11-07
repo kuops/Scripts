@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: traefik-conf
+  namespace: kube-system
+data:
+  traefik.toml: |
+    debug = false
+    logLevel = "INFO"
+    defaultEntryPoints = ["https","http"]
+
+    [entryPoints]
+      [entryPoints.http]
+      address = ":80"
+        [entryPoints.http.redirect]
+        entryPoint = "https"
+      [entryPoints.https]
+      address = ":443"
+      [entryPoints.https.tls]
+
+    [retry]
+
+    [acme]
+    email = "opshsy@gmail.com"
+    storage = "acme.json"
+    entryPoint = "https"
+    onHostRule = true
+    [acme.httpChallenge]
+    entryPoint = "http"
