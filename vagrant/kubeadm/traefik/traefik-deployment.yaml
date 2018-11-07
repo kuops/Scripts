@@ -41,7 +41,7 @@ spec:
         volumeMounts:
         - mountPath: /etc/traefik/config
           name: config
-        - mountPath: /etc/traefik/cert/
+        - mountPath: /etc/traefik/cert
           name: cert
       volumes:
       - name: config
