@@ -51,12 +51,19 @@ Vagrant.configure("2") do |config|
 	stable"
 
 	apt-get update
-	apt-get install -y docker-ce
+	apt-get install -y docker-ce=18.06.0~ce~3-0~ubuntu
 	tee -i /etc/docker/daemon.json <<-'EOF'
 	{
-	  "registry-mirrors": ["https://fz5yth0r.mirror.aliyuncs.com"]
+	  "registry-mirrors": ["https://fz5yth0r.mirror.aliyuncs.com"],
+	  "exec-opts": ["native.cgroupdriver=systemd"],
+	  "log-driver": "json-file",
+	  "log-opts": {
+	    "max-size": "100m"
+	  },
+	  "storage-driver": "overlay2"
 	}
 	EOF
+
 	usermod -aG docker vagrant
 	systemctl restart docker
 	systemctl enable docker
@@ -64,6 +71,11 @@ Vagrant.configure("2") do |config|
 	# install ansible
 	pip install -i https://pypi.tuna.tsinghua.edu.cn/simple ansible
 
+	# coredns loop plugin bug fix
+	systemctl stop systemd-resolved
+	systemctl disable systemd-resolved
+        echo "nameserver 223.5.5.5" > /etc/resolv.conf
+	
 	# install kubernetes
 	curl https://mirrors.aliyun.com/kubernetes/apt/doc/apt-key.gpg | apt-key add -
 	echo 'deb https://mirrors.aliyun.com/kubernetes/apt/ kubernetes-xenial main'| \
@@ -83,7 +95,7 @@ Vagrant.configure("2") do |config|
 	  token: 14oozg.4x9auimp4bgi7sav
 	  ttl: 24h0m0s
 	imageRepository: kuops
-	kubernetesVersion: v1.12.0
+	kubernetesVersion: v1.12.2
 	networking:
 	  dnsDomain: cluster.local
 	  podSubnet: 10.244.0.0/16
@@ -113,29 +125,17 @@ Vagrant.configure("2") do |config|
 	  kubectl taint nodes --all node-role.kubernetes.io/master-
 
 	  # kube network use flannel
-	  kubectl apply  -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/kube-flannel.yml
+	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/flannel/kube-flannel.yml
 
 	  # bash complate
 	  echo "source <(kubectl completion bash)" >> /etc/profile.d/kubernetes.sh
 	  source /etc/profile.d/kubernetes.sh
 
 	  # local storage class
-	  tee -i storageclass.yml <<-'EOF'
-	  kind: StorageClass
-	  apiVersion: storage.k8s.io/v1
-	  metadata:
-	    name: local-storage
-	    annotations:
-	      storageclass.kubernetes.io/is-default-class: "true"
-	  labels:
-	    addonmanager.kubernetes.io/mode: EnsureExists
-	  provisioner: kubernetes.io/host-path
-	EOF
-
-	  kubectl apply -f storageclass.yml
-
-	  # coredns bugfix
-	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/coredns/coredns-comfigmap.yml
+	  kubectl apply -f https://raw.githubusercontent.com/kubernetes-incubator/external-storage/master/nfs/deploy/kubernetes/rbac.yaml
+	  kubectl apply -f https://raw.githubusercontent.com/kubernetes-incubator/external-storage/master/nfs/deploy/kubernetes/class.yaml
+	  kubectl apply -f https://raw.githubusercontent.com/kubernetes-incubator/external-storage/master/nfs/deploy/kubernetes/claim.yaml
+	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/storageclass/deployment.yaml
 
 	  # traefik ingress 
 	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/traefik/traefik-rbac.yaml
