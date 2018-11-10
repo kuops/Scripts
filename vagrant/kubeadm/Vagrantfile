@@ -132,10 +132,10 @@ Vagrant.configure("2") do |config|
 	  source /etc/profile.d/kubernetes.sh
 
 	  # local storage class
-	  kubectl apply -f https://raw.githubusercontent.com/kubernetes-incubator/external-storage/master/nfs/deploy/kubernetes/rbac.yaml
-	  kubectl apply -f https://raw.githubusercontent.com/kubernetes-incubator/external-storage/master/nfs/deploy/kubernetes/class.yaml
-	  kubectl apply -f https://raw.githubusercontent.com/kubernetes-incubator/external-storage/master/nfs/deploy/kubernetes/claim.yaml
 	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/storageclass/deployment.yaml
+	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/storageclass/class.yaml
+	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/storageclass/rbac.yaml
+	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/storageclass/claim.yaml
 
 	  # traefik ingress 
 	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/traefik/traefik-rbac.yaml
