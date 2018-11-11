@@ -1,8 +1,11 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+file_to_disk = "external.vmdk"
+
 Vagrant.configure("2") do |config|
-  config.vm.box = 'ubuntu/bionic64'
+  config.vm.box = 'centos/7'
+  config.vm.box_version = "1809.01"
   config.vm.box_check_update = false
   config.ssh.insert_key = false
   config.ssh.private_key_path = [ "/mnt/d/vagrant-home/.vagrant.d/insecure_private_key", "~/.ssh/id_rsa" ]
@@ -13,110 +16,96 @@ Vagrant.configure("2") do |config|
   config.hostmanager.manage_guest = true
   config.hostmanager.ignore_private_ip = false
   config.hostmanager.include_offline = true
+  config.vm.synced_folder '.', '/vagrant', disabled: "true"
   config.vm.provider "virtualbox" do |vb|
     # bugfix at https://github.com/hashicorp/vagrant/issues/8604
     vb.customize [ "modifyvm", :id, "--uartmode1", "disconnected" ]
     vb.memory = "16384"
     vb.cpus = "4"
+    unless File.exist?(file_to_disk)
+      vb.customize [ 'createmedium', 'disk', '--filename', file_to_disk, '--size', 500 * 1024, '--format', 'VMDK' ]
+    end
+    vb.customize [ 'storageattach', :id, '--storagectl', 'IDE', '--port', 1, '--device', 0, '--type', 'hdd', '--medium', file_to_disk ]
   end
   config.vm.provision "file", source: "~/.ssh/id_rsa.pub", destination: "/home/vagrant/.ssh/vagrant.pub"
   config.vm.provision "shell", inline: <<-SHELL
 	#!/usr/bin/env bash
 	set -ex
 
-	# preventing apt-get trying access stdin
-	export DEBIAN_FRONTEND=noninteractive
-
 	# ssh public key insert to authorized_keys
-	cat /home/vagrant/.ssh/vagrant.pub >> /home/vagrant/.ssh/authorized_keys
+	cat /home/vagrant/.ssh/vagrant.pub > /home/vagrant/.ssh/authorized_keys
 
-	# replace source list mirrors
-	sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/cloud/cloud.cfg
-	sed -i 's/security.ubuntu.com/mirrors.aliyun.com/g' /etc/cloud/cloud.cfg
-	systemctl restart cloud-init
-	sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
-	sed -i 's/security.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list
+	# replace yum repo to mirrors.aliyun.com
+	curl -Lo /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo
+	curl -Lo /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-7.repo
 
-	# install common software
-	apt-get update
-	apt-get install -y python-pip htop wget pv git htop iotop apache2-utils mysql-client tree iotop iftop bash-completion zip unzip apache2-utils software-properties-common lrzsz redis-tools bind9utils lftp net-tools dos2unix apt-transport-https curl
+	# disable selinux
+	sed  -i 's@^SELINUX=.*@SELINUX=disabled@g' /etc/selinux/config
+
+	# common soft
+	yum -y install vim python-pip htop wget pv git htop iotop httpd-tools mariadb tree iotop iftop bash-completion zip unzip software-properties-common lrzsz bind-utils lftp net-tools dos2unix curl 
 
 	# install docker
-	apt-get install -y apt-transport-https ca-certificates curl software-properties-common
-	curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | apt-key add -
-
-	add-apt-repository \
-	"deb [arch=amd64] https://mirrors.aliyun.com/docker-ce/linux/ubuntu/ \
-	$(lsb_release -cs) \
-	stable"
-
-	apt-get update
-	apt-get install -y docker-ce=18.06.0~ce~3-0~ubuntu
-	tee -i /etc/docker/daemon.json <<-'EOF'
+	cat > /etc/sysctl.d/kubernetes.conf <<-EOF
+	net.ipv4.ip_forward=1
+	net.bridge.bridge-nf-call-ip6tables = 1
+	net.bridge.bridge-nf-call-iptables = 1
+	EOF
+	sysctl --system
+	curl -Lo /etc/yum.repos.d/docker-ce.repo https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+	sed  -i 's@download-stage.docker.com@mirrors.aliyun.com/docker-ce@g' /etc/yum.repos.d/docker-ce.repo
+	yum -y install docker-ce-18.06.1.ce
+	mkdir -p /etc/docker/
+	cat > /etc/docker/daemon.json <<-EOF
 	{
-	  "registry-mirrors": ["https://fz5yth0r.mirror.aliyuncs.com"],
 	  "exec-opts": ["native.cgroupdriver=systemd"],
+	  "registry-mirrors": ["https://fz5yth0r.mirror.aliyuncs.com"],
 	  "log-driver": "json-file",
 	  "log-opts": {
-	    "max-size": "100m"
+	    "max-size": "100m",
+	    "max-file": "3"
 	  },
-	  "storage-driver": "overlay2"
+	  "storage-driver": "overlay2",
+	  "storage-opts": [
+	    "overlay2.override_kernel_check=true"
+	  ]
 	}
 	EOF
-
-	usermod -aG docker vagrant
+	mkdir -p /etc/systemd/system/docker.service.d
+	systemctl daemon-reload
 	systemctl restart docker
-	systemctl enable docker
+        systemctl enable docker
 
-	# install ansible
-	pip install -i https://pypi.tuna.tsinghua.edu.cn/simple ansible
-
-	# coredns loop plugin bug fix
-	systemctl stop systemd-resolved
-	systemctl disable systemd-resolved
-        echo "nameserver 223.5.5.5" > /etc/resolv.conf
-	
-	# install kubernetes
-	curl https://mirrors.aliyun.com/kubernetes/apt/doc/apt-key.gpg | apt-key add -
-	echo 'deb https://mirrors.aliyun.com/kubernetes/apt/ kubernetes-xenial main'| \
-	sudo tee -i /etc/apt/sources.list.d/kubernetes.list
-	apt-get update
-	apt-get install -y kubelet kubeadm kubectl
-
-	tee -i /home/vagrant/config.yml <<-'EOF'
-	apiVersion: kubeadm.k8s.io/v1alpha2
-	kind: MasterConfiguration
-	api:
-	  advertiseAddress: 10.0.7.100
-	  bindPort: 6443
-	bootstrapTokens:
-	- groups:
-	  - system:bootstrappers:kubeadm:default-node-token
-	  token: 14oozg.4x9auimp4bgi7sav
-	  ttl: 24h0m0s
-	imageRepository: kuops
-	kubernetesVersion: v1.12.2
-	networking:
-	  dnsDomain: cluster.local
-	  podSubnet: 10.244.0.0/16
-	  serviceSubnet: 10.96.0.0/12
-	nodeRegistration:
-	  taints:
-	  - effect: NoSchedule
-	    key: node-role.kubernetes.io/master
+	# install kubeadm kubectl and kubelet
+	cat > /etc/yum.repos.d/kubernetes.repo <<-EOF
+	[kubernetes]
+	name=Kubernetes
+	baseurl=https://mirrors.aliyun.com/kubernetes/yum/repos/kubernetes-el7-x86_64/
+	enabled=1
+	gpgcheck=1
+	repo_gpgcheck=1
+	gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
 	EOF
+	setenforce 0
+	yum install -y kubelet-1.12.2 kubeadm-1.12.2 kubectl-1.12.2
+	systemctl enable kubelet && systemctl start kubelet
+	
+	# disable swap partition
+	swapoff -a
+	sed -i '/swap/d' /etc/fstab
 
 	# kubeadm pulling  images
-	kubeadm config images pull --config config.yml
+	curl -Lo /tmp/config.yaml https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/init-config/config.yaml
+	kubeadm config images pull --config /tmp/config.yaml
+
 	if ! kubectl get node &> /dev/null ;then
 	  # kubeadm init
-	  kubeadm init --config config.yml
+	  kubeadm init --config /tmp/config.yaml
 
 	  # set kubectl config
 	  mkdir -p ~vagrant/.kube
 	  cp -i /etc/kubernetes/admin.conf ~vagrant/.kube/config
 	  chown vagrant:vagrant ~vagrant/.kube/config
-
 	  mkdir -p ~/.kube
 	  cp -i /etc/kubernetes/admin.conf ~/.kube/config
 	  chown root:root ~/.kube/config
@@ -131,6 +120,9 @@ Vagrant.configure("2") do |config|
 	  echo "source <(kubectl completion bash)" >> /etc/profile.d/kubernetes.sh
 	  source /etc/profile.d/kubernetes.sh
 
+	  # coredns configmap fix loop plugins bug
+	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/coredns/coredns-configmap.yaml
+
 	  # local storage class
 	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/storageclass/deployment.yaml
 	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/storageclass/class.yaml
@@ -141,6 +133,7 @@ Vagrant.configure("2") do |config|
 	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/traefik/traefik-rbac.yaml
 	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/traefik/traefik-configmap.yaml
 	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/traefik/traefik-deployment.yaml
+          kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/traefik/traefik-pvc.yaml
 
 	  # metric-servers
 	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/metric-server/aggregated-metrics-reader.yaml
