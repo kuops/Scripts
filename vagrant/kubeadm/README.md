@@ -9,7 +9,7 @@ vagrant plugin install vagrant-hostmanager --plugin-clean-sources --plugin-sourc
 vagrant 添加本地文件
 
 ```
-vagrant box add ubuntu-metadata.json
+vagrant box add centos-metadata.json
 ```
 
 如果使用 windows , path 按以下调整
