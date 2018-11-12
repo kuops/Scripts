@@ -6,6 +6,12 @@ vagrant 安装插件
 vagrant plugin install vagrant-hostmanager --plugin-clean-sources --plugin-source https://gems.ruby-china.com/
 ```
 
+下载 vbox 文件
+
+```
+curl -SLO /mnt/d/localrepo/ http://mirrors.ustc.edu.cn/centos-cloud/centos/7/vagrant/x86_64/images/CentOS-7-x86_64-Vagrant-1809_01.VirtualBox.box
+```
+
 vagrant 添加本地文件
 
 ```
