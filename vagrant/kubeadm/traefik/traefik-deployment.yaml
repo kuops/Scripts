@@ -37,19 +37,6 @@ spec:
         - --api
         - --kubernetes
         - --logLevel=INFO
-        - --configfile=/etc/traefik/config/traefik.toml
-        volumeMounts:
-        - mountPath: /etc/traefik/config
-          name: config
-        - mountPath: /etc/traefik/cert
-          name: cert
-      volumes:
-      - name: config
-        configMap:
-          name: traefik-conf
-      - name: cert
-        persistentVolumeClaim:
-          claimName: traefik-cert
 ---
 kind: Service
 apiVersion: v1
