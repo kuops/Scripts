@@ -10,12 +10,12 @@ spec:
   type: NodePort
   ports:
     - name: http
-      nodeport: 31000
+      nodePort: 31000
       port: 80
       targetPort: 80
       protocol: TCP
     - name: https
-      nodeport: 31001
+      nodePort: 31001
       port: 443
       targetPort: 443
       protocol: TCP
