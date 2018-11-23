@@ -38,12 +38,18 @@ Vagrant.configure("2") do |config|
 	# replace yum repo to mirrors.aliyun.com
 	curl -Lo /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo
 	curl -Lo /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-7.repo
+	
+	# disable NetworkManager
+	echo -e "[main]\ndns=none" > /etc/NetworkManager/conf.d/dns.conf
+	systemctl restart NetworkManager
+
+	echo "nameserver 114.114.114.114" > /etc/resolv.conf
 
 	# disable selinux
 	sed  -i 's@^SELINUX=.*@SELINUX=disabled@g' /etc/selinux/config
 
 	# common soft
-	yum -y install vim python-pip htop wget pv git htop iotop httpd-tools mariadb tree iotop iftop bash-completion zip unzip software-properties-common lrzsz bind-utils lftp net-tools dos2unix curl 
+	yum -y install vim python-pip htop wget pv git htop iotop httpd-tools mariadb tree iotop iftop bash-completion zip unzip software-properties-common lrzsz bind-utils lftp net-tools dos2unix curl nginx
 
 	# install docker
 	cat > /etc/sysctl.d/kubernetes.conf <<-EOF
@@ -72,6 +78,7 @@ Vagrant.configure("2") do |config|
 	}
 	EOF
 	mkdir -p /etc/systemd/system/docker.service.d
+	usermod -aG docker vagrant
 	systemctl daemon-reload
 	systemctl restart docker
         systemctl enable docker
@@ -87,7 +94,10 @@ Vagrant.configure("2") do |config|
 	gpgkey=https://mirrors.aliyun.com/kubernetes/yum/doc/yum-key.gpg https://mirrors.aliyun.com/kubernetes/yum/doc/rpm-package-key.gpg
 	EOF
 	setenforce 0
+	# yum --showduplicates list <package>
 	yum install -y kubelet-1.12.2 kubeadm-1.12.2 kubectl-1.12.2
+        sed -i 's@KUBELET_EXTRA_ARGS=.*@KUBELET_EXTRA_ARGS="--pod-infra-container-image=kuops/pause:3.1"@g' /etc/sysconfig/kubelet
+        systemctl daemon-reload
 	systemctl enable kubelet && systemctl start kubelet
 	
 	# disable swap partition
@@ -116,9 +126,26 @@ Vagrant.configure("2") do |config|
 	  # kube network use flannel
 	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/flannel/kube-flannel.yml
 
-	  # bash complate
-	  echo "source <(kubectl completion bash)" >> /etc/profile.d/kubernetes.sh
-	  source /etc/profile.d/kubernetes.sh
+	  # bash completion
+	  echo "source <(kubectl completion bash)" >> /etc/profile.d/kubernetes-kubectl.sh
+	  source /etc/profile.d/kubernetes-kubectl.sh
+
+	  # install helm 来墙我呀
+	  docker pull lachlanevenson/k8s-helm:v2.11.0
+	  docker run --name helm -dit --rm --entrypoint /bin/cat lachlanevenson/k8s-helm:v2.11.0
+	  docker cp helm:/usr/local/bin/helm /usr/local/bin/helm
+	  docker rm -f helm
+	  docker rmi lachlanevenson/k8s-helm:v2.11.0
+
+	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/helm/tiller-rbac.yaml
+	  /usr/local/bin/helm init --upgrade --service-account tiller \
+	  --skip-refresh -i kuops/tiller:v2.11.0 \
+	  --stable-repo-url https://kubernetes.oss-cn-hangzhou.aliyuncs.com/charts
+	  /usr/local/bin/helm repo update 
+
+	  # helm completion
+	  echo "source <(helm completion bash)" >> /etc/profile.d/kubernetes-helm.sh
+	  source /etc/profile.d/kubernetes-helm.sh
 
 	  # coredns configmap fix loop plugins bug
 	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/coredns/coredns-configmap.yaml
@@ -129,23 +156,16 @@ Vagrant.configure("2") do |config|
 	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/storageclass/rbac.yaml
 	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/storageclass/claim.yaml
 
-	  # traefik ingress 
-	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/traefik/traefik-rbac.yaml
-	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/traefik/traefik-configmap.yaml
-	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/traefik/traefik-deployment.yaml
-          kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/traefik/traefik-pvc.yaml
+	  # nginx ingress
+	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/nginx-ingress/mandatory.yaml
+	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/nginx-ingress/service-nodeport.yaml
+          
+          # external nginx
+          curl -SLo /etc/nginx/nginx.conf https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/external-nginx/nginx.conf
+          systemctl restart nginx
+          systemctl enable nginx
 
-	  # metric-servers
-	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/metric-server/aggregated-metrics-reader.yaml
-	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/metric-server/auth-delegator.yaml
-	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/metric-server/auth-reader.yaml
-	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/metric-server/resource-reader.yaml
-	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/metric-server/metrics-apiservice.yaml
-	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/metric-server/metrics-server-deployment.yaml
-	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/metric-server/metrics-server-service.yaml
-
-	  # install kubernetes dashboard
-	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/dashboard/kubernetes-dashboard.yaml
+	  # prometheus
 
 	  # install efk to logging
 	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/efk/es-service.yaml
@@ -155,6 +175,14 @@ Vagrant.configure("2") do |config|
 	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/efk/kibana-deployment.yaml
 	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/efk/kibana-service.yaml
 
+	  # install kubernetes dashboard
+	  mkdir /home/vagrant/certs
+	  openssl req -nodes -newkey rsa:2048 -keyout /home/vagrant/certs/dashboard.key -out /home/vagrant/certs/dashboard.csr -subj "/CN=kubernetes-dashboard"
+	  openssl x509 -req -sha256 -days 36500 -in /home/vagrant/certs/dashboard.csr -signkey /home/vagrant/certs/dashboard.key -out /home/vagrant/certs/dashboard.crt
+	  kubectl create secret generic kubernetes-dashboard-certs --from-file=/home/vagrant/certs -n kube-system
+	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/dashboard/kubernetes-dashboard.yaml
+	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/dashboard/admin-user.yaml
+	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/dashboard/dashboard-ingress.yaml
 	fi
   SHELL
 end
