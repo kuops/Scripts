@@ -1,4 +1,4 @@
-# Kubeadm 集群一键启动
+# Kubeadm all in one
 
 vagrant 安装插件
 
