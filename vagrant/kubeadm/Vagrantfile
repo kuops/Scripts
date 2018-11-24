@@ -32,6 +32,13 @@ Vagrant.configure("2") do |config|
 	#!/usr/bin/env bash
 	set -ex
 
+	# add storage
+	parted /dev/sdb mklabel gpt
+	parted /dev/sdb mkpart primary 1 500G
+	mkfs.xfs /dev/sdb1
+	mount /dev/sdb1 /srv
+	echo "/dev/sdb1 /srv  xfs defaults 0 0" > /etc/fstab
+
 	# ssh public key insert to authorized_keys
 	cat /home/vagrant/.ssh/vagrant.pub > /home/vagrant/.ssh/authorized_keys
 
@@ -151,6 +158,7 @@ Vagrant.configure("2") do |config|
 	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/coredns/coredns-configmap.yaml
 
 	  # local storage class
+	  kubectl label nodes kubernetes-dev nfs-node=true
 	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/storageclass/deployment.yaml
 	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/storageclass/class.yaml
 	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/storageclass/rbac.yaml
