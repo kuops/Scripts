@@ -151,7 +151,7 @@ Vagrant.configure("2") do |config|
 	  /usr/local/bin/helm repo update 
 
 	  # helm completion
-	  echo "source <(helm completion bash)" >> /etc/profile.d/kubernetes-helm.sh
+	  echo "source <(/usr/local/bin/helm completion bash)" >> /etc/profile.d/kubernetes-helm.sh
 	  source /etc/profile.d/kubernetes-helm.sh
 
 	  # coredns configmap fix loop plugins bug
