@@ -163,6 +163,7 @@ Vagrant.configure("2") do |config|
 	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/storageclass/class.yaml
 	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/storageclass/rbac.yaml
 	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/storageclass/claim.yaml
+	  kubectl patch storageclass example-nfs -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
           
           # external nginx
           curl -SLo /etc/nginx/nginx.conf https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/external-nginx/nginx.conf
