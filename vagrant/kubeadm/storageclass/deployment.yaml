@@ -40,6 +40,8 @@ spec:
         app: nfs-provisioner
     spec:
       serviceAccount: nfs-provisioner
+      nodeSelector:
+        nfs-node: true
       containers:
         - name: nfs-provisioner
           image: registry.cn-beijing.aliyuncs.com/jingjingxyk/nfs-provisioner:latest
