@@ -159,6 +159,9 @@ Vagrant.configure("2") do |config|
 	  # nginx ingress
 	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/nginx-ingress/mandatory.yaml
 	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/nginx-ingress/service-nodeport.yaml
+	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/nginx-ingress/dashboard-ingress.yaml
+	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/nginx-ingress/kibana-ingress.yaml
+	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/nginx-ingress/prometheus-ingress.yaml
           
           # external nginx
           curl -SLo /etc/nginx/nginx.conf https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/external-nginx/nginx.conf
@@ -166,8 +169,11 @@ Vagrant.configure("2") do |config|
           systemctl enable nginx
 
 	  # prometheus
+	  git clone https://github.com/kuops/Scripts.git
+	  kubectl apply -f Scripts/vagrant/kubeadm/kube-prometheus/manifests
 
 	  # install efk to logging
+	  kubectl label nodes kubernetes-dev beta.kubernetes.io/fluentd-ds-ready=true
 	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/efk/es-service.yaml
 	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/efk/es-statefulset.yaml
 	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/efk/fluentd-es-configmap.yaml
@@ -179,10 +185,9 @@ Vagrant.configure("2") do |config|
 	  mkdir /home/vagrant/certs
 	  openssl req -nodes -newkey rsa:2048 -keyout /home/vagrant/certs/dashboard.key -out /home/vagrant/certs/dashboard.csr -subj "/CN=kubernetes-dashboard"
 	  openssl x509 -req -sha256 -days 36500 -in /home/vagrant/certs/dashboard.csr -signkey /home/vagrant/certs/dashboard.key -out /home/vagrant/certs/dashboard.crt
-	  kubectl create secret generic kubernetes-dashboard-certs --from-file=/home/vagrant/certs -n kube-system
+	  kubectl create secret generic kubernetes-dashboard-certs --from-file=certs/ -n kube-system
 	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/dashboard/kubernetes-dashboard.yaml
 	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/dashboard/admin-user.yaml
-	  kubectl apply -f https://raw.githubusercontent.com/kuops/Scripts/master/vagrant/kubeadm/dashboard/dashboard-ingress.yaml
 	fi
   SHELL
 end
