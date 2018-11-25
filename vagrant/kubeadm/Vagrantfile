@@ -72,7 +72,7 @@ Vagrant.configure("2") do |config|
 	chown -R docker:docker /etc/docker/
 	cat > /etc/docker/daemon.json <<-EOF
 	{
-	  "insecure-registries":["docker.k8s.example.com"],
+	  "insecure-registries":["docker.k8s.kuops.com"],
 	  "data-root": "/data/docker",
 	  "exec-opts": ["native.cgroupdriver=systemd"],
 	  "registry-mirrors": ["https://fz5yth0r.mirror.aliyuncs.com"],
