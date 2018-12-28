@@ -60,7 +60,6 @@ sudo sh -c ' echo "kuops    ALL=(ALL)    NOPASSWD: ALL" > /etc/sudoers.d/kuops'
 
 # install xfce4
 sudo apt-get install -y xfce4
-sudo apt-get install -y conky
 
 # install vscode
 sudo apt-get install -y libgtk2.0-0 libxss1 libasound2
