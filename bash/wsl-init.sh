@@ -60,6 +60,7 @@ sudo sh -c ' echo "kuops    ALL=(ALL)    NOPASSWD: ALL" > /etc/sudoers.d/kuops'
 
 # install xfce4
 sudo apt-get install -y xfce4
+sudo apt-get install -y conky
 
 # install vscode
 sudo apt-get install -y libgtk2.0-0 libxss1 libasound2
@@ -74,3 +75,10 @@ sudo apt-get install -y code
 
 # install tmux
 sudo apt-get install -y tmux
+
+# upgrade soft
+sudo apt-get upgrade
+
+# install bash-it
+git clone --depth=1 https://github.com/Bash-it/bash-it.git ~/.bash_it
+~/.bash_it/install.sh
