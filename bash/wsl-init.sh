@@ -25,6 +25,11 @@ if ! grep 'WSL'  ~/.bashrc  &> /dev/null ;then
 	export LIBGL_ALWAYS_INDIRECT=1
 	export DISPLAY=0:0
 
+	# fcitx
+	export XMODIFIERS=@im=fcitx
+	export GTK_IM_MODULE=fcitx
+	export QT_IM_MODULE=fcitx
+	
 	# alias 
 	alias  gohome='cd /mnt/c/Code/go_workspace'
 	alias  vhome='cd /mnt/d/vagrant-home'
