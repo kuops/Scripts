@@ -8,21 +8,24 @@ cd ~
 if ! grep 'WSL'  ~/.bashrc  &> /dev/null ;then
   sudo tee -a  ~/.bashrc <<-'EOF'
 	# umask settings
-	umask  0002
+	umask  0022
 
-	# wsl env settings
+	# Vagrant
 	export PATH="$PATH:/mnt/d/VirtualBox"
 	export VAGRANT_WSL_ENABLE_WINDOWS_ACCESS="1"
 	export VAGRANT_WSL_WINDOWS_ACCESS_USER_HOME_PATH=/mnt/d/
 	export VAGRANT_HOME=/mnt/d/vagrant-home/.vagrant.d/
+	
+	# golang
 	export GOROOT=/usr/local/go
 	export GOPATH=/mnt/c/Code/go_workspace
 	export PATH=$GOROOT/bin:$GOPATH/bin:$PATH
+	
 	# X Server
 	export LIBGL_ALWAYS_INDIRECT=1
 	export DISPLAY=0:0
 
-	# my alias
+	# alias 
 	alias  gohome='cd /mnt/c/Code/go_workspace'
 	alias  vhome='cd /mnt/d/vagrant-home'
 	alias  vps='sshpass -p 'xxx' ssh -p 22 root@x.x.x.x -o StrictHostKeyChecking=no'
@@ -54,3 +57,20 @@ git config --global color.ui true
 
 # set no password sudoers
 sudo sh -c ' echo "kuops    ALL=(ALL)    NOPASSWD: ALL" > /etc/sudoers.d/kuops'
+
+# install xfce4
+sudo apt-get install -y xfce4
+
+# install vscode
+sudo apt-get install -y libgtk2.0-0 libxss1 libasound2
+cd ~
+curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
+sudo mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg
+sudo sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list'
+sudo apt-get update
+sudo apt-get install -y code
+# install vscode insiders
+#sudo apt install code-insiders
+
+# install tmux
+sudo apt-get install tmux
