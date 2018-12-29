@@ -34,6 +34,7 @@ if ! grep 'WSL'  ~/.bashrc  &> /dev/null ;then
 	alias  gohome='cd /mnt/c/Code/go_workspace'
 	alias  vhome='cd /mnt/d/vagrant-home'
 	alias  vps='sshpass -p 'xxx' ssh -p 22 root@x.x.x.x -o StrictHostKeyChecking=no'
+	alias  google-chrome='google-chrome --no-gpu --no-sandbox --disable-setuid-sandbox'
 EOF
 fi
 
