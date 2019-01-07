@@ -30,6 +30,47 @@ if ! [ -f /etc/default/init-bash ];then
 	export GTK_IM_MODULE=fcitx
 	export QT_IM_MODULE=fcitx
 	
+	# xterm color
+	export TERM="xterm-256color"
+	
+	# alias 
+	alias  gohome='cd /mnt/c/Code/go_workspace'
+	alias  vhome='cd /mnt/d/vagrant-home'
+	alias  vps='sshpass -p 'xxx' ssh -p 22 root@x.x.x.x -o StrictHostKeyChecking=no'
+	alias  google-chrome='google-chrome --no-gpu --no-sandbox --disable-setuid-sandbox'
+	alias vim='nvim'
+
+EOF
+
+# set zshrc
+
+  sudo tee -a  ~/.bashrc <<-'EOF'
+	# umask settings
+	umask  0022
+
+	# Vagrant variables
+	export PATH="$PATH:/mnt/d/VirtualBox"
+	export VAGRANT_WSL_ENABLE_WINDOWS_ACCESS="1"
+	export VAGRANT_WSL_WINDOWS_ACCESS_USER_HOME_PATH=/mnt/d/
+	export VAGRANT_HOME=/mnt/d/vagrant-home/.vagrant.d/
+	
+	# golang variables
+	export GOROOT=/usr/local/go
+	export GOPATH=/mnt/c/Code/go_workspace
+	export PATH=$GOROOT/bin:$GOPATH/bin:$PATH
+	
+	# X Server variables
+	export LIBGL_ALWAYS_INDIRECT=1
+	export DISPLAY=0:0
+
+	# fcitx variables
+	export XMODIFIERS=@im=fcitx
+	export GTK_IM_MODULE=fcitx
+	export QT_IM_MODULE=fcitx
+	
+	# xterm color
+	export TERM="xterm-256color"
+	
 	# alias 
 	alias  gohome='cd /mnt/c/Code/go_workspace'
 	alias  vhome='cd /mnt/d/vagrant-home'
