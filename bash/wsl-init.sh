@@ -135,6 +135,8 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/mas
 # setting zsh theme
 # git clone https://github.com/bhilburn/powerlevel9k.git /home/kuops/.oh-my-zsh/custom/themes/powerlevel9k
 # sed -i 's@^ZSH_THEME=.*@ZSH_THEME="powerlevel9k/powerlevel9k"@g' /home/kuops/.zshrc
+curl https://raw.githubusercontent.com/caiogondim/bullet-train.zsh/master/bullet-train.zsh-theme > $ZSH_CUSTOM/themes/bullet-train.zsh-theme
+sed -i 's@^ZSH_THEME=.*@ZSH_THEME="bullet-train"@g' /home/kuops/.zshrc
 
 # install done
 echo "done" > /etc/default/init-bash
