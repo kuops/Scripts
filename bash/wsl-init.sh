@@ -91,7 +91,7 @@ sudo apt-get install -y xfce4
 sudo apt-get install -y tmux
 
 # upgrade soft
-sudo apt-get upgrade
+sudo apt-get upgrade -y
 
 # insall chinese pinyin
 sudo apt-get install fcitx
