@@ -5,27 +5,27 @@ set -ex
 cd ~
 
 # set bashrc
-if ! grep 'WSL'  ~/.bashrc  &> /dev/null ;then
+if ! [ -f /etc/default/init-bash ];then
   sudo tee -a  ~/.bashrc <<-'EOF'
 	# umask settings
 	umask  0022
 
-	# Vagrant
+	# Vagrant variables
 	export PATH="$PATH:/mnt/d/VirtualBox"
 	export VAGRANT_WSL_ENABLE_WINDOWS_ACCESS="1"
 	export VAGRANT_WSL_WINDOWS_ACCESS_USER_HOME_PATH=/mnt/d/
 	export VAGRANT_HOME=/mnt/d/vagrant-home/.vagrant.d/
 	
-	# golang
+	# golang variables
 	export GOROOT=/usr/local/go
 	export GOPATH=/mnt/c/Code/go_workspace
 	export PATH=$GOROOT/bin:$GOPATH/bin:$PATH
 	
-	# X Server
+	# X Server variables
 	export LIBGL_ALWAYS_INDIRECT=1
 	export DISPLAY=0:0
 
-	# fcitx
+	# fcitx variables
 	export XMODIFIERS=@im=fcitx
 	export GTK_IM_MODULE=fcitx
 	export QT_IM_MODULE=fcitx
@@ -36,12 +36,11 @@ if ! grep 'WSL'  ~/.bashrc  &> /dev/null ;then
 	alias  vps='sshpass -p 'xxx' ssh -p 22 root@x.x.x.x -o StrictHostKeyChecking=no'
 	alias  google-chrome='google-chrome --no-gpu --no-sandbox --disable-setuid-sandbox'
 EOF
-fi
 
 # install golang
-curl -fSLO https://dl.google.com/go/go1.11.1.linux-amd64.tar.gz
-tar xf go1.11.1.linux-amd64.tar.gz -C /usr/local/
-rm go1.11.1.linux-amd64.tar.gz
+curl -fSLO https://dl.google.com/go/go1.11.4.linux-amd64.tar.gz
+tar xf go1.11.4.linux-amd64.tar.gz -C /usr/local/
+rm go1.11.4.linux-amd64.tar.gz
 
 # install vagrant
 wget https://releases.hashicorp.com/vagrant/2.2.2/vagrant_2.2.2_x86_64.deb
@@ -53,7 +52,9 @@ vagrant plugin install vagrant-hostmanager vagrant-env --plugin-clean-sources --
 sudo sed -i 's/archive.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list
 sudo sed -i 's/security.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list
 sudo apt-get update
-sudo apt-get install -y ansible sshpass
+
+# install software
+sudo apt-get install -y ansible sshpass python-pip 
 
 # setting git global configs
 git config --global user.name "kuops"
@@ -75,6 +76,7 @@ sudo mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg
 sudo sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list'
 sudo apt-get update
 sudo apt-get install -y code
+
 # install vscode insiders
 #sudo apt install code-insiders
 
@@ -87,3 +89,4 @@ sudo apt-get upgrade
 # insall chinese pinyin
 sudo apt-get install fcitx
 sudo apt-get install fcitx-pinyin
+fi
