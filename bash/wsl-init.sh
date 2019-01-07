@@ -49,6 +49,8 @@ wget https://releases.hashicorp.com/vagrant/2.2.2/vagrant_2.2.2_x86_64.deb
 sudo dpkg -i vagrant_2.2.2_x86_64.deb
 sudo rm vagrant_2.2.2_x86_64.deb
 vagrant plugin install vagrant-hostmanager vagrant-env --plugin-clean-sources --plugin-source https://gems.ruby-china.com/
+unset HTTPS_PROXY
+unset HTTP_PROXY
 
 # settings china apt-get sources
 sudo sed -i 's/archive.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list
