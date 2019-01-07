@@ -161,7 +161,7 @@ sudo add-apt-repository ppa:neovim-ppa/stable
 sudo apt-get update
 sudo apt-get install neovim
 sudo apt-get install python-dev python-pip python3-dev python3-pip
-curl https://raw.githubusercontent.com/Shougo/neobundle.vim/master/bin/install.sh  |bash
+curl https://raw.githubusercontent.com/Shougo/dein.vim/master/bin/installer.sh|bash
 
 # install subl
 wget -qO - https://download.sublimetext.com/sublimehq-pub.gpg | sudo apt-key add -
