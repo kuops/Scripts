@@ -130,6 +130,10 @@ sudo apt-get install fonts-powerline
 sudo apt-get install -y zsh
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
 
+# use powershell install powerline font
+# git clone https://github.com/powerline/fonts.git
+# .\install.ps1
+
 # install done
 echo "done" > /etc/default/init-bash
 fi
