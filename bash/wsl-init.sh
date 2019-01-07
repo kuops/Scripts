@@ -38,6 +38,8 @@ if ! [ -f /etc/default/init-bash ];then
 EOF
 
 # install golang
+HTTPS_PROXY=127.0.0.1:1080
+HTTP_PROXY=$HTTPS_PROXY
 curl -fSLO https://dl.google.com/go/go1.11.4.linux-amd64.tar.gz
 tar xf go1.11.4.linux-amd64.tar.gz -C /usr/local/
 rm go1.11.4.linux-amd64.tar.gz
