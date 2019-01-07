@@ -126,6 +126,10 @@ sudo apt-get install sublime-text -y
 # install powerline font
 sudo apt-get install fonts-powerline
 
+# install oh my zsh
+sudo apt-get install -y zsh
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+
 # install done
 echo "done" > /etc/default/init-bash
 fi
