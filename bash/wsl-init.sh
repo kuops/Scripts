@@ -116,6 +116,12 @@ sudo apt-get update
 sudo apt-get install neovim
 sudo apt-get install python-dev python-pip python3-dev python3-pip
 
+# install subl
+wget -qO - https://download.sublimetext.com/sublimehq-pub.gpg | sudo apt-key add -
+echo "deb https://download.sublimetext.com/ apt/stable/" | sudo tee /etc/apt/sources.list.d/sublime-text.list
+sudo apt-get update
+sudo apt-get install sublime-text -y
+
 # install done
 echo "done" > /etc/default/init-bash
 fi
