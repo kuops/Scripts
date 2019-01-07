@@ -44,7 +44,7 @@ EOF
 
 # set zshrc
 
-  sudo tee -a  ~/.bashrc <<-'EOF'
+  sudo tee -a  ~/.zshrc <<-'EOF'
 	# umask settings
 	umask  0022
 
