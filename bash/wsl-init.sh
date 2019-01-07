@@ -81,6 +81,9 @@ EOF
 	alias  google-chrome='google-chrome --no-gpu --no-sandbox --disable-setuid-sandbox'
 	alias vim='nvim'
 
+	# default editor
+	export EDITOR="nvim"
+
 EOF
 
 # install golang
