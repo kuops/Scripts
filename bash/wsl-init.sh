@@ -71,13 +71,13 @@ sudo sh -c ' echo "kuops    ALL=(ALL)    NOPASSWD: ALL" > /etc/sudoers.d/kuops'
 sudo apt-get install -y xfce4
 
 # install vscode
-sudo apt-get install -y libgtk2.0-0 libxss1 libasound2
-cd ~
-curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
-sudo mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg
-sudo sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list'
-sudo apt-get update
-sudo apt-get install -y code
+# sudo apt-get install -y libgtk2.0-0 libxss1 libasound2
+# cd ~
+# curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
+# sudo mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg
+# sudo sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main" > /etc/apt/sources.list.d/vscode.list'
+# sudo apt-get update
+# sudo apt-get install -y code
 
 # install vscode insiders
 #sudo apt install code-insiders
@@ -103,6 +103,14 @@ Host github.com
   ProxyCommand nc -x 127.0.0.1:1080 %h %p
 EOF
 chmod 600 /home/kuops/.ssh/config
+
+# install neovim
+sudo apt-get install software-properties-common
+sudo apt-get install python-software-properties
+sudo add-apt-repository ppa:neovim-ppa/stable
+sudo apt-get update
+sudo apt-get install neovim
+sudo apt-get install python-dev python-pip python3-dev python3-pip
 
 # install done
 echo "done" > /etc/default/init-bash
