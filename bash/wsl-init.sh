@@ -123,6 +123,9 @@ echo "deb https://download.sublimetext.com/ apt/stable/" | sudo tee /etc/apt/sou
 sudo apt-get update
 sudo apt-get install sublime-text -y
 
+# install powerline font
+sudo apt-get install fonts-powerline
+
 # install done
 echo "done" > /etc/default/init-bash
 fi
