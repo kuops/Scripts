@@ -163,6 +163,10 @@ sudo apt-get install neovim
 sudo apt-get install python-dev python-pip python3-dev python3-pip
 curl https://raw.githubusercontent.com/Shougo/dein.vim/master/bin/installer.sh|bash
 
+# neovim setting
+# github address: https://github.com/Shougo/dein.vim
+# https://github.com/vim-airline/vim-airline-themes
+
 # install subl
 wget -qO - https://download.sublimetext.com/sublimehq-pub.gpg | sudo apt-key add -
 echo "deb https://download.sublimetext.com/ apt/stable/" | sudo tee /etc/apt/sources.list.d/sublime-text.list
