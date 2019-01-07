@@ -54,7 +54,7 @@ sudo sed -i 's/security.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list
 sudo apt-get update
 
 # install software
-sudo apt-get install -y ansible sshpass python-pip 
+sudo apt-get install -y ansible sshpass python-pip git bash-completion
 
 # setting git global configs
 git config --global user.name "kuops"
@@ -89,4 +89,24 @@ sudo apt-get upgrade
 # insall chinese pinyin
 sudo apt-get install fcitx
 sudo apt-get install fcitx-pinyin
+
+# setting ssh config
+mkdir -p /home/kuops/.ssh
+cat <<EOF> /home/kuops/.ssh/config
+# github account
+Host github.com
+  HostName github.com
+  User git
+  IdentityFile ~/.ssh/id_rsa
+  ProxyCommand nc -x 10.0.7.1:1080 %h %p
+EOF
+chmod 600 /home/kuops/.ssh/config
+
+# install neovim
+sudo apt-get install software-properties-common
+sudo apt-get install python-software-properties
+sudo add-apt-repository ppa:neovim-ppa/stable
+sudo apt-get update
+sudo apt-get install neovim
+sudo apt-get install python-dev python-pip python3-dev python3-pip
 fi
