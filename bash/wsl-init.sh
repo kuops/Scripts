@@ -133,8 +133,8 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/mas
 # .\install.ps1
 
 # setting zsh theme
-git clone https://github.com/bhilburn/powerlevel9k.git /home/kuops/.oh-my-zsh/custom/themes/powerlevel9k
-sed -i 's@^ZSH_THEME=.*@ZSH_THEME="powerlevel9k/powerlevel9k"@g' /home/kuops/.zshrc
+# git clone https://github.com/bhilburn/powerlevel9k.git /home/kuops/.oh-my-zsh/custom/themes/powerlevel9k
+# sed -i 's@^ZSH_THEME=.*@ZSH_THEME="powerlevel9k/powerlevel9k"@g' /home/kuops/.zshrc
 
 # install done
 echo "done" > /etc/default/init-bash
