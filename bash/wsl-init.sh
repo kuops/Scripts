@@ -132,7 +132,9 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/mas
 # git clone https://github.com/powerline/fonts.git
 # .\install.ps1
 
-# use 
+# setting zsh theme
+git clone https://github.com/bhilburn/powerlevel9k.git /home/kuops/.oh-my-zsh/custom/themes/powerlevel9k
+sed -i 's@^ZSH_THEME=.*@ZSH_THEME="powerlevel9k/powerlevel9k"@g' /home/kuops/.zshrc
 
 # install done
 echo "done" > /etc/default/init-bash
