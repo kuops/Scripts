@@ -98,7 +98,7 @@ Host github.com
   HostName github.com
   User git
   IdentityFile ~/.ssh/id_rsa
-  ProxyCommand nc -x 10.0.7.1:1080 %h %p
+  ProxyCommand nc -x 127.0.0.1:1080 %h %p
 EOF
 chmod 600 /home/kuops/.ssh/config
 
