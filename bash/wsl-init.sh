@@ -94,8 +94,8 @@ sudo apt-get install -y tmux
 sudo apt-get upgrade -y
 
 # insall chinese pinyin
-sudo apt-get install fcitx
-sudo apt-get install fcitx-pinyin
+sudo apt-get install fcitx -y
+sudo apt-get install fcitx-pinyin -y
 
 # setting ssh config
 mkdir -p /home/kuops/.ssh
