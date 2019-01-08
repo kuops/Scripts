@@ -128,6 +128,9 @@ sudo apt-get install -y xfce4
 # install tmux
 sudo apt-get install -y tmux
 
+# install tmux plugins manager
+git clone https://github.com/tmux-plugins/tpm /home/kuops/.tmux/plugins/tpm
+
 # upgrade soft
 sudo apt-get upgrade -y
 
