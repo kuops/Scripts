@@ -38,10 +38,6 @@ if ! [ -f /etc/default/init-bash ];then
 	alias  vhome='cd /mnt/d/vagrant-home'
 	alias  vps='sshpass -p 'xxx' ssh -p 22 root@x.x.x.x -o StrictHostKeyChecking=no'
 	alias  google-chrome='google-chrome --no-gpu --no-sandbox --disable-setuid-sandbox'
-	alias vim='nvim'
-	
-	# default editor
-	export EDITOR="nvim"
 
 EOF
 
@@ -79,10 +75,6 @@ EOF
 	alias  vhome='cd /mnt/d/vagrant-home'
 	alias  vps='sshpass -p 'xxx' ssh -p 22 root@x.x.x.x -o StrictHostKeyChecking=no'
 	alias  google-chrome='google-chrome --no-gpu --no-sandbox --disable-setuid-sandbox'
-	alias vim='nvim'
-
-	# default editor
-	export EDITOR="nvim"
 
 EOF
 
