@@ -91,6 +91,15 @@ Vagrant.configure("2") do |config|
 	systemctl daemon-reload
 	systemctl restart docker
         systemctl enable docker
+	
+	# install ntp
+	sudo yum -y install ntp
+	sudo systemctl disable chronyd.service
+	sudo systemctl stop chronyd.service
+	sudo sed  -i 's@^server.*@#&@g;25aserver ntp1.aliyun.com' /etc/ntp.conf
+        sudo systemctl start  ntpd
+	sudo systemctl enable  ntpd
+	sudo timedatectl set-timezone  Asia/Shanghai
 
 	# install kubeadm kubectl and kubelet
 	cat > /etc/yum.repos.d/kubernetes.repo <<-EOF
