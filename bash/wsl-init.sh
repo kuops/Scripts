@@ -11,7 +11,7 @@ if ! [ -f /etc/default/init-bash ];then
 	umask  0022
 
 	# Vagrant variables
-	export PATH="$PATH:/mnt/d/VirtualBox"
+	export PATH="$PATH:/mnt/c/Software/VirtualBox"
 	export VAGRANT_WSL_ENABLE_WINDOWS_ACCESS="1"
 	export VAGRANT_WSL_WINDOWS_ACCESS_USER_HOME_PATH=/mnt/d/
 	export VAGRANT_HOME=/mnt/d/vagrant-home/.vagrant.d/
@@ -164,11 +164,12 @@ sed -i 's@^ZSH_THEME=.*@ZSH_THEME="bullet-train"@g' /home/kuops/.zshrc
 # set zshrc
 
   sudo tee -a  ~/.zshrc <<-'EOF'
+  	
 	# umask settings
 	umask  0022
 
 	# Vagrant variables
-	export PATH="$PATH:/mnt/d/VirtualBox"
+	export PATH="$PATH:/mnt/c/Software/VirtualBox"
 	export VAGRANT_WSL_ENABLE_WINDOWS_ACCESS="1"
 	export VAGRANT_WSL_WINDOWS_ACCESS_USER_HOME_PATH=/mnt/d/
 	export VAGRANT_HOME=/mnt/d/vagrant-home/.vagrant.d/
